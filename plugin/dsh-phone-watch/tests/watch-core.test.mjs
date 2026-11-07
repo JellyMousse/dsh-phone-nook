@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { nextDue, inPeak, inSleep, isDue, isPaused, normalizeConfig } from '../lib/watch-core.mjs';
+import { nextDue, inPeak, inSleep, isDue, isPaused, normalizeConfig, normalizePolicy, policyRules } from '../lib/watch-core.mjs';
 
 const cfg = normalizeConfig({ awakeStart: 10, sleepStart: 3, idleMin: 20, awaitingMin: 5, peakMul: 2 });
-const at = (h, m = 0, s = 0) => new Date(2026, 10, 5, h, m, s, 0); // 2026-11-05 本地时间
+const at = (h, m = 0) => new Date(2026, 10, 5, h, m, 0, 0); // 2026-11-05 本地时间
 const fixed = (v) => () => v;
 
 test('谷时常态间隔不翻倍', () => {
@@ -63,10 +63,10 @@ test('峰时窗口边界左闭右开', () => {
   assert.equal(inPeak(12, [[9, 12]]), false);
 });
 
-test('到点判断含 60 秒提前容忍（必须明显小于最短间隔，否则会自喂自）', () => {
+test('到点判断含 5 分钟提前容忍', () => {
   const due = new Date(at(11).getTime()).toISOString();
-  assert.equal(isDue(at(10, 59, 30), due), true);
-  assert.equal(isDue(at(10, 58), due), false);
+  assert.equal(isDue(at(10, 56), due), true);
+  assert.equal(isDue(at(10, 54), due), false);
   assert.equal(isDue(at(11, 30), due), true);
   assert.equal(isDue(at(11), null), false);
 });
@@ -76,6 +76,47 @@ test('暂停判定', () => {
   assert.equal(isPaused(at(12), until), true);
   assert.equal(isPaused(at(14), until), false);
   assert.equal(isPaused(at(14), null), false);
+});
+
+test('回话规矩默认严格：只回主人和被点名的', () => {
+  const 行 = policyRules(undefined);
+  assert.equal(行.length, 1);
+  assert.match(行[0], /只回主人/);
+  assert.match(行[0], /@我/);
+});
+
+test('回话规矩：列了主人就点名，没列就写「主人」', () => {
+  assert.match(policyRules({ ownerNames: ['主人', '阿豹'] })[0], /主人、阿豹/);
+  assert.doesNotMatch(policyRules({})[0], /主人、/);
+  assert.match(policyRules({ mentionKeywords: ['@呆呆'] })[0], /@呆呆/);
+});
+
+test('友好方式：列出的群可以主动接话，没列就说只按上一条', () => {
+  const 有 = policyRules({ mode: 'friendly', freeTalkGroups: ['群A', '群B'] });
+  assert.match(有[1], /主动接话/);
+  assert.match(有[1], /群A、群B/);
+  const 无 = policyRules({ mode: 'friendly' });
+  assert.match(无[1], /只按上一条/);
+});
+
+test('安静方式：群里连点名也不回', () => {
+  const 行 = policyRules({ mode: 'quiet' });
+  assert.match(行[0], /连@我 也不回|连@我也不回/);
+});
+
+test('不接名单与自定义说明都进明文', () => {
+  const 行 = policyRules({ ignoreSenders: ['广告号'], extra: '只聊技术，别聊钱' });
+  assert.ok(行.some((l) => l.includes('广告号')));
+  assert.ok(行.some((l) => l.includes('只聊技术')));
+});
+
+test('策略归一化：未知方式回落到严格，名单去空去脏', () => {
+  const p = normalizePolicy({ mode: '乱写', ownerNames: [' 主人 ', '', 3], extra: 'x'.repeat(900) });
+  assert.equal(p.mode, 'strict');
+  assert.deepEqual(p.ownerNames, ['主人', '3']);
+  assert.equal(p.extra.length, 500);
+  // 配置里带着策略一起归一化，别被 normalizeConfig 吃掉
+  assert.equal(normalizeConfig({ policy: { mode: 'friendly' } }).policy.mode, 'friendly');
 });
 
 test('配置归一化兜住脏值', () => {

@@ -16,7 +16,7 @@ import { readFileSync, writeFileSync, mkdirSync, renameSync, rmSync } from 'node
 import { homedir } from 'node:os'
 import { join } from 'node:path'
 import { randomUUID } from 'node:crypto'
-import { normalizeConfig, nextDue, isDue, isPaused, inPeak, inSleep } from './watch-core.mjs'
+import { normalizeConfig, nextDue, isDue, isPaused, inPeak, inSleep, policyRules } from './watch-core.mjs'
 
 export const name = 'phone-watch'
 export const inject = ['agents', 'sessions', 'webServer', 'timer']
@@ -144,49 +144,27 @@ function __真实(ctx) {
     return undefined
   }
 
-  /** 脚本目录：配置优先，其次 DSH_HOME/skills/<默认 skill>，让插件不绑死某个 skill 名。 */
-  function 目录们(配置) {
-    const 斜 = (s) => String(s).replace(/\\/g, '/')
-    return {
-      脚本: 斜(配置.scriptsBase || join(目录, 'skills', 'phone-ops')),
-      记忆: 斜(配置.memoryBase || join(目录, 'skills', 'phone-memory')),
-    }
-  }
-
   function 唤醒文案(配置, 算出, 现在, 状态) {
     const 段 = inSleep(现在.getHours(), 配置.awakeStart, 配置.sleepStart)
       ? '睡眠区'
       : inPeak(现在.getHours(), 配置.peakWindows)
         ? '峰时'
         : '谷时'
-    const { 脚本, 记忆 } = 目录们(配置)
-
-    // 自定义文案：{time} {phase} {interval} {next} {scriptsBase} {memoryBase}
-    if (配置.promptTemplate) {
-      const 填 = (t) => t
-        .replace(/\{time\}/g, 时间文(现在))
-        .replace(/\{phase\}/g, 段)
-        .replace(/\{interval\}/g, String(算出.minutes))
-        .replace(/\{next\}/g, 时间文(算出.due))
-        .replace(/\{scriptsBase\}/g, 脚本)
-        .replace(/\{memoryBase\}/g, 记忆)
-      return '（值守插件定时提醒，不是主人消息；照跑一轮，别回应这句。）\n' + 填(配置.promptTemplate)
-    }
-
     const 行 = [
       // ⚠ 角色只能是 user，模型会把它读成「对方说的话」；第一行必须点明这是插件提醒，不是主人发的
       '（值守插件定时提醒，不是主人消息；照跑一轮，别回应这句。）',
       '【手机值守】' + 时间文(现在) + '（' + 段 + '，间隔 ' + 算出.minutes + ' 分，下一轮 ' + 时间文(算出.due) + '）',
-      '1) 探针 python "' + 脚本 + '/watch_probe.py"，unread:0 直接收尾。',
-      '2) unread>0 才 observe；群里只回 @ 我或主人的。',
-      '3) 退到会话列表，顺手报一轮：python "' + 脚本 + '/report_round.py" reply（没聊就 idle）。',
+      '1) 探针 python __DSH__/skills/phone-caretaker/watch_probe.py，unread:0 直接收尾。',
+      '2) unread>0 才 observe；回话按下面这份规矩（设置页可改）：',
+      ...policyRules(配置.policy).map((一条) => '   · ' + 一条),
+      '3) 退到会话列表，顺手报一轮：python __DSH__/skills/phone-caretaker/report_round.py reply（没聊就 idle）。',
     ]
     const 上次 = 状态 && 状态.last_reason
     const 刚聊过 = 上次 === 'reply' || 上次 === 'no-reply'
     if (现在.getHours() === 2) {
-      行.push('4) 睡前：python "' + 记忆 + '/phone_memory.py" digest')
+      行.push('4) 睡前：python __DSH__/skills/phone-memory/phone_memory.py digest')
     } else if (刚聊过) {
-      行.push('4) 刚聊过就记档案：python "' + 记忆 + '/phone_memory.py" touch 会话名 "聊了啥" --topic 话题')
+      行.push('4) 刚聊过就记档案：python __DSH__/skills/phone-memory/phone_memory.py touch 会话名 "聊了啥" --topic 话题')
     }
     if (!刚聊过 || 现在.getHours() === 2) {
       行.push('5) 没在聊就别动记忆；别建 dsh-schedule at 任务，节拍归插件。')

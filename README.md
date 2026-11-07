@@ -264,7 +264,8 @@ cp -r plugin/dsh-phone-watch ~/.dsh/profiles/<name>/vendor/
 
 1. 填 `targetSession`：要唤醒的会话 id（在会话列表里能看到，形如 `session-xxxx`）
 2. 调作息：`awakeStart` / `sleepStart`（跨午夜也支持）
-3. 打开总开关
+3. 定「回话规矩」：`strict` 只回你和被点名的（默认）、`friendly` 指定的群可以主动接话、`quiet` 只回私聊；顺手填主人昵称、点名关键词
+4. 打开总开关
 
 然后点「立即跑一轮」，看它是不是真的叫醒了 agent。
 

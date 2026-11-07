@@ -4,6 +4,7 @@
 
 ## 2026-11-07
 
+- **回话规矩可配**：以前「只回部署者或被点名的」是写死在每轮提醒里的一句话，现在它是配置里的 `policy`：`mode`（strict / friendly / quiet）、`ownerNames`、`mentionKeywords`、`freeTalkGroups`、`ignoreSenders`、`extra`。设置页新增「回话规矩」一块，宿主用 `policyRules()` 翻成人话拼进每轮提醒——规矩仍由模型读和执行，但内容归部署者写，不用改代码。默认 `strict`，跟旧行为一致。
 - **值守与会话解耦**：值守插件每轮的 `followup` 在宿主里是一条 user 消息，会和「主动搭话」类插件的时机/冷却互相污染。做法写进 README —— 建两个会话，`targetSession` 指向值守会话，搭话插件指向聊天会话，不改任何第三方源码。
 - **等回音有上限**：`report_round.py --awaiting` 连报 4 轮没回音就自动收回常态节奏（`--wait-max` 可调，计数在 `~/.dsh/phone-watch-awaiting.json`），免得没人回也一直短间隔空跑。
 - **设置页说明拆开**：「平时多久看一次」和「等你回话时」分成两行，各写各的用途；「忙的时候」补一句「把上面两个间隔乘这个倍数」。

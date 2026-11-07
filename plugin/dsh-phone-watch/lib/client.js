@@ -94,6 +94,12 @@ window.__ModuleLoader__.load({
       return 负 ? '迟 ' + 文 : 文
     }
 
+    const 拆名单 = (文) =>
+      String(文 || '')
+        .split(/[,，、]/)
+        .map((s) => s.trim())
+        .filter(Boolean)
+
     const 峰窗文 = (窗) => (窗 || []).map(([a, b]) => a + '-' + b).join(', ')
     const 解峰窗 = (文) =>
       String(文 || '')
@@ -126,6 +132,13 @@ window.__ModuleLoader__.load({
               awaitingMin: c.awaitingMin,
               peakMul: c.peakMul,
               peakWindows: 峰窗文(c.peakWindows),
+              // 回话规矩：数组在界面上是顿号隔开的一行字，存的时候再拆回数组
+              policyMode: (c.policy && c.policy.mode) || 'strict',
+              policyOwners: ((c.policy && c.policy.ownerNames) || []).join('、'),
+              policyMentions: ((c.policy && c.policy.mentionKeywords) || []).join('、'),
+              policyGroups: ((c.policy && c.policy.freeTalkGroups) || []).join('、'),
+              policyIgnore: ((c.policy && c.policy.ignoreSenders) || []).join('、'),
+              policyExtra: (c.policy && c.policy.extra) || '',
             }
           : null
 
@@ -167,6 +180,14 @@ window.__ModuleLoader__.load({
           awaitingMin: Number(草.awaitingMin),
           peakMul: Number(草.peakMul),
           peakWindows: 解峰窗(草.peakWindows),
+          policy: {
+            mode: 草.policyMode,
+            ownerNames: 拆名单(草.policyOwners),
+            mentionKeywords: 拆名单(草.policyMentions),
+            freeTalkGroups: 拆名单(草.policyGroups),
+            ignoreSenders: 拆名单(草.policyIgnore),
+            extra: String(草.policyExtra || '').trim(),
+          },
         }).then((r) => {
           设忙('')
           if (r && r.ok) {
@@ -273,7 +294,7 @@ window.__ModuleLoader__.load({
                 h('input', { style: S.small, type: 'number', min: 1, value: 草.idleMin, onChange: 改('idleMin') }),
                 h('span', { style: S.dim }, '分钟一轮'),
               ),
-              h('div', { style: S.hint }, '没在等谁回话时的节奏：隔这么多分钟扫一遍聊天 App。调大更省、反应更慢；调小更及时、也更费。'),
+              h('div', { style: S.hint }, '没在等谁回话时的节奏：隔这么多分钟扫一遍微信。调大更省、反应更慢；调小更及时、也更费。'),
             ),
           ),
           h(
@@ -344,7 +365,19 @@ window.__ModuleLoader__.load({
               { style: { ...S.ctl, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' } },
               按钮('保存', 存, true, 忙 === '存'),
               按钮('恢复默认', () => {
-                设草(从配置摘草({ awakeStart: 10, sleepStart: 3, idleMin: 20, awaitingMin: 5, peakMul: 2, peakWindows: [[9, 12], [14, 18]], enabled: true, targetSession: 草.targetSession }))
+                设草(
+                  从配置摘草({
+                    awakeStart: 10,
+                    sleepStart: 3,
+                    idleMin: 20,
+                    awaitingMin: 5,
+                    peakMul: 2,
+                    peakWindows: [[9, 12], [14, 18]],
+                    enabled: true,
+                    targetSession: 草.targetSession,
+                    policy: { mode: 'strict', ownerNames: [], mentionKeywords: [], freeTalkGroups: [], ignoreSenders: [], extra: '' },
+                  }),
+                )
                 说设('例子填回来了，记得按保存。')
               }, false, 忙),
               说 ? h('span', { style: { ...S.ok } }, 说) : null,
@@ -355,6 +388,90 @@ window.__ModuleLoader__.load({
         h(
           'div',
           { style: S.card },
+        h(
+          'div',
+          { style: S.card },
+          h('div', { style: S.h }, '回话规矩'),
+          h('div', { style: S.sub }, '值守时跟谁说话、能不能主动开口，都在这里定。改完下一轮生效。'),
+          h(
+            'div',
+            { style: { ...S.rowFirst, borderTop: 'none', paddingTop: 2 } },
+            h('div', { style: S.lab }, '说话方式'),
+            h(
+              'div',
+              { style: S.ctl },
+              h(
+                'select',
+                { style: { ...S.input, width: 240 }, value: 草.policyMode, onChange: 改('policyMode') },
+                h('option', { value: 'strict' }, '严格：只回主人和被点名的'),
+                h('option', { value: 'friendly' }, '友好：指定的群可以主动接话'),
+                h('option', { value: 'quiet' }, '安静：只回主人私聊，群里连点名也不回'),
+              ),
+              h('div', { style: S.hint }, '「主动接话」指没人点名也能自己开口吐槽、搭话，只在下面列出的群里生效。'),
+            ),
+          ),
+          h(
+            'div',
+            { style: S.row },
+            h('div', { style: S.lab }, '谁是主人'),
+            h(
+              'div',
+              { style: S.ctl },
+              h('input', { style: S.input, value: 草.policyOwners, onChange: 改('policyOwners'), placeholder: '留空就按「给我下指令的那个账号」' }),
+              h('div', { style: S.hint }, '多人用顿号或逗号隔开，写对方在微信里的昵称或备注。只有这些人发的话我必回。'),
+            ),
+          ),
+          h(
+            'div',
+            { style: S.row },
+            h('div', { style: S.lab }, '怎么算点名我'),
+            h(
+              'div',
+              { style: S.ctl },
+              h('input', { style: S.input, value: 草.policyMentions, onChange: 改('policyMentions'), placeholder: '留空就按 @我（@呆呆、@Kuma 都算）' }),
+              h('div', { style: S.hint }, '消息里出现这些字就算叫我。填 @呆呆、@Kuma 之类，多个用顿号隔开。'),
+            ),
+          ),
+          h(
+            'div',
+            { style: S.row },
+            h('div', { style: S.lab }, '可以主动接话的群'),
+            h(
+              'div',
+              { style: S.ctl },
+              h('input', { style: S.input, value: 草.policyGroups, onChange: 改('policyGroups'), placeholder: '群名或人名，用顿号隔开；留空就谁都不主动' }),
+              h('div', { style: S.hint }, '只对「友好」方式有用。列在这里的群，没人叫我也能自己开口；其它群仍然只回主人和被点名的。'),
+            ),
+          ),
+          h(
+            'div',
+            { style: S.row },
+            h('div', { style: S.lab }, '这些人不接'),
+            h(
+              'div',
+              { style: S.ctl },
+              h('input', { style: S.input, value: 草.policyIgnore, onChange: 改('policyIgnore'), placeholder: '想拉黑的群或人，用顿号隔开' }),
+              h('div', { style: S.hint }, '名单里的群/人，就算点名叫我也不回，只记下来。'),
+            ),
+          ),
+          h(
+            'div',
+            { style: S.row },
+            h('div', { style: S.lab }, '另外的规矩'),
+            h(
+              'div',
+              { style: S.ctl },
+              h('textarea', {
+                style: { ...S.input, minHeight: 68, resize: 'vertical', lineHeight: 1.7 },
+                value: 草.policyExtra,
+                onChange: 改('policyExtra'),
+                placeholder: '比如：只聊技术，别聊钱；家里人发的都回；群里只接梗不打广告。',
+              }),
+              h('div', { style: S.hint }, '写人话就行，会原样加进每一轮的提醒里，跟上面几条一起用。'),
+            ),
+          ),
+        ),
+
           h('div', { style: S.h }, '我手痒的时候'),
           h('div', { style: S.sub }, '平时别点，出问题才用。'),
           h(

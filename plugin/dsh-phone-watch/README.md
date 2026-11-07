@@ -23,25 +23,39 @@
                     │是
                     ▼
              发一轮(reason) ──► agent.followup(一条 user 消息)
-                    │            文案=「按 skill phone-watch 跑一轮，收尾写 round」
+                    │            文案=「按 skill phone-watch 跑一轮，收尾 POST /round」
                     ▼
            next_due = 算下一轮；写状态文件
                     │
-   agent 跑完这一轮 ──► report_round.py 写 ~/.dsh/phone-watch-round.json
+   agent 跑完这一轮 ──► POST /dsh-phone-watch/round {reason, awaiting, note}
                     ▼
               next_due 按本轮结果重排（等回应就短间隔）
 ```
 
 ## 排期规则（lib/watch-core.mjs）
 
-- 常态间隔 `idleMin`（默认 20 分钟），刚回过话等回应时用 `awaitingMin`（默认 8 分钟）；连等 4 轮还没回音就自动收回 `idleMin`（计数在 `~/.dsh/phone-watch-awaiting.json`，可用 `report_round.py --wait-max N` 调）
+- 常态间隔 `idleMin`（默认 20 分钟），刚回过话等回应时用 `awaitingMin`（默认 5 分钟）；连等 4 轮还没回音就自动回到 `idleMin`（计数在 `~/.dsh/phone-watch-awaiting.json`，可用 `--wait-max` 调）
 - 峰时窗口 `peakWindows`（默认 9-12、14-18）里间隔 ×`peakMul`（默认 2）—— 人在电脑前消息密，少叫几次省 token
 - 落进睡眠区（`sleepStart` 睡着 → `awakeStart` 醒）就顺延到起床点，再加 0~`wakeSpreadMin` 分钟随机散布，免得每天同一秒醒
-- 到点判断带 `earlyToleranceSec` 提前容忍（默认 60 秒；表可能被浏览器节流，早一点不算错）
-  - **警告**：这个值必须远小于 `awaitingMin`。老版本两者都是 300 秒，导致每轮收尾后立刻又判到点，一分钟连发一次。
+- 到点判断带 5 分钟提前容忍（表可能被浏览器节流，早个几分钟不算错）
 - 暂停 `pausedUntil` 期间不叫
 
-全是无副作用的纯函数，`node --test tests/` 覆盖跨午夜、峰时边界、起床散布、容差、脏配置兜底等用例。
+全是无副作用的纯函数，`node --test tests/` 覆盖 18 条边界（跨午夜、峰时边界、起床散布、脏配置兜底、回话规矩各模式）。
+
+## 回话规矩（可配）
+
+「只回主人和被点名的」这类社交边界，以前写死在每轮提醒的一句话里。现在它是配置里的 `policy`，设置页有「回话规矩」一块，改完下一轮生效：
+
+| 键 | 默认 | 说人话 |
+| --- | --- | --- |
+| `mode` | `strict` | `strict` 只回主人 + 被点名的；`friendly` 额外允许在 `freeTalkGroups` 里主动接话；`quiet` 只回主人私聊，群里连点名也不回 |
+| `ownerNames` | 空 → 「主人」 | 谁是主人。多人用顿号隔开，写对方在微信里的昵称/备注 |
+| `mentionKeywords` | 空 → 「@我」 | 消息里出现这些字就算点名。例如 `["@呆呆","@Kuma"]` |
+| `freeTalkGroups` | `[]` | 可以主动接话（不必等人点名）的群或人，只在 `friendly` 下生效 |
+| `ignoreSenders` | `[]` | 一律不接的群或人，点了名也不回，只记录 |
+| `extra` | `""` | 另外的规矩，写人话，原样拼进每轮提醒 |
+
+宿主侧把 `policy` 翻成几行人话（`policyRules()`），拼进那条 `followup` 提醒里。也就是说：**规矩仍然由模型读、模型执行，但内容归你写**，不用改代码。
 
 ## 装
 
@@ -57,15 +71,13 @@
 
 或者交给 `plugin_manager`（需要审批权限）。
 
-装完去 **设置 → 手机值守**：填目标 session id、改作息与间隔、按「保存设置」。倒计时、今天跑了几轮、最近记录都在那一页。
+装完去 **设置 → 手机值守**：填目标 session id、改作息与间隔、定「回话规矩」、按「保存设置」。倒计时、今天跑了几轮、最近记录都在那一页。
 
 ## 配置与状态
 
 都在 `DSH_HOME`（默认 `~/.dsh`）下：
 
-- `phone-watch-config.json`：`enabled`、`targetSession`、`awakeStart`、`sleepStart`、`idleMin`、`awaitingMin`、`earlyToleranceSec`、`peakMul`、`peakWindows`、`wakeSpreadMin`、`pausedUntil`、`scriptsBase`、`memoryBase`、`promptTemplate`
-  - `scriptsBase` / `memoryBase`：脚本与记忆目录（默认 `~/.dsh/skills/phone-ops`、`~/.dsh/skills/phone-memory`），换目录不用改代码
-  - `promptTemplate`：唤醒文案模板，可用 `{time} {phase} {interval} {next} {scriptsBase} {memoryBase}`
+- `phone-watch-config.json`：`enabled`、`targetSession`、`awakeStart`、`sleepStart`、`idleMin`、`awaitingMin`、`peakMul`、`peakWindows`、`wakeSpreadMin`、`pausedUntil`、`policy`（见上「回话规矩」）
 - `phone-watch-state.json`：`next_due`、`dispatched_at`、`awaiting`、`rounds_today`、`log`（最多 30 条）
 
 ## 本机接口
@@ -100,4 +112,4 @@
 node --test tests/
 ```
 
-`tests/watch-core.test.mjs` 纯函数用例；`tests/host.test.mjs` 用假 ctx（假的 agents / webServer / interval）跑通装、叫、收尾、暂停、跨站拦截、自定义目录与文案 —— 不连真 DSH 也能验逻辑。全量 22 条，`npm test` 一把过。
+`tests/watch-core.test.mjs` 12 条纯函数用例；`tests/host.test.mjs` 7 条用假 ctx（假的 agents / webServer / interval）跑通装、叫、收尾、暂停、跨站拦截 —— 不连真 DSH 也能验逻辑。

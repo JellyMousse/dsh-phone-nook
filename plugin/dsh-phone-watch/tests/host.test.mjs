@@ -150,30 +150,7 @@ test('上一轮真聊过，唤醒文案才带记忆一步', async () => {
   表[0]()
   await new Promise((r) => setTimeout(r, 50))
   assert.equal(唤醒.length, 1)
-  assert.match(唤醒[0].content[0].text, /phone_memory\.py"? touch/)
-})
-
-test('解耦：scriptsBase / promptTemplate 可覆盖，插件不绑死 skill 名', async () => {
-  const { 架子, 表, 唤醒 } = 搭架()
-  apply(架子)
-  writeFileSync(join(家, 'phone-watch-config.json'), JSON.stringify({
-    enabled: true,
-    targetSession: 'session-abc',
-    idleMin: 1,
-    scriptsBase: '/opt/my-phone/skills/probe',
-    promptTemplate: '自定义轮：{phase} {time} 间隔 {interval} 分；探针在 {scriptsBase}',
-  }))
-  const 状态路 = join(家, 'phone-watch-state.json')
-  const 态 = JSON.parse(readFileSync(状态路, 'utf8'))
-  态.next_due = new Date(Date.now() - 60000).toISOString()
-  writeFileSync(状态路, JSON.stringify(态))
-  表[0]()
-  await new Promise((r) => setTimeout(r, 50))
-  assert.equal(唤醒.length, 1)
-  const 文 = 唤醒[0].content[0].text
-  assert.match(文, /自定义轮：/)
-  assert.ok(文.includes('/opt/my-phone/skills/probe'), '自定义 scriptsBase 要出现在文案里')
-  assert.doesNotMatch(文, /__DSH__/, '不能再吐占位符，陌生人拿不到替换')
+  assert.match(唤醒[0].content[0].text, /phone_memory\.py touch/)
 })
 
 test('agent 写收件文件报轮，tick 会收走并重排', async () => {
@@ -246,4 +223,49 @@ test('pause / resume 生效', async () => {
   const 四 = 响应()
   await 路由表.get('/dsh-phone-watch/action').handler(请求('POST', { action: 'run' }), 四)
   assert.equal(四.json().result.ok, true)
+})
+
+test('回话规矩按配置注入每一轮的提醒', async () => {
+  const { 架子, 表, 唤醒 } = 搭架()
+  apply(架子)
+  writeFileSync(
+    join(家, 'phone-watch-config.json'),
+    JSON.stringify({
+      enabled: true,
+      targetSession: 'session-abc',
+      idleMin: 1,
+      policy: { mode: 'friendly', ownerNames: ['主人'], mentionKeywords: ['@呆呆'], freeTalkGroups: ['恁好群'], extra: '只聊技术，别聊钱' },
+    }),
+  )
+  const 状态路 = join(家, 'phone-watch-state.json')
+  const 态 = JSON.parse(readFileSync(状态路, 'utf8'))
+  态.next_due = new Date(Date.now() - 60000).toISOString()
+  writeFileSync(状态路, JSON.stringify(态))
+  表[0]()
+  await new Promise((r) => setTimeout(r, 50))
+  assert.equal(唤醒.length, 1)
+  const 文 = 唤醒[0].content[0].text
+  assert.match(文, /回话按下面这份规矩/)
+  assert.match(文, /恁好群/)
+  assert.match(文, /只聊技术，别聊钱/)
+  assert.match(文, /主人/)
+  // 写死的旧红线不该再出现
+  assert.doesNotMatch(文, /群里只回 @ 我或主人的/)
+})
+
+test('设置页存的 policy 能落盘并回读', async () => {
+  const { 架子, 路由表 } = 搭架()
+  apply(架子)
+  const 应 = 响应()
+  await 路由表.get('/dsh-phone-watch/config').handler(
+    请求('POST', { policy: { mode: 'quiet', ownerNames: ['主人'], ignoreSenders: ['广告号'] } }),
+    应,
+  )
+  const 果 = 应.json()
+  assert.equal(果.ok, true)
+  assert.equal(果.config.policy.mode, 'quiet')
+  assert.deepEqual(果.config.policy.ownerNames, ['主人'])
+  assert.deepEqual(果.config.policy.ignoreSenders, ['广告号'])
+  const 盘 = JSON.parse(readFileSync(join(家, 'phone-watch-config.json'), 'utf8'))
+  assert.equal(盘.policy.mode, 'quiet')
 })
