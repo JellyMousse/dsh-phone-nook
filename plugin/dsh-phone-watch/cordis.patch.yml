@@ -1,0 +1,5 @@
+# DSH「手机值守」
+# id 同时是配置命名空间、日志前缀和路由前缀的一部分，改的话两处要一致。
+- insert:
+    - id: phone-watch
+      name: 'dsh-phone-watch'

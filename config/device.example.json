@@ -1,0 +1,23 @@
+{
+  "_doc": "复制为 config/device.json 后填写。device.json 已在 .gitignore 里，不会被提交。",
+
+  "adb": "adb",
+  "serial": "192.168.1.10:5555",
+  "serialFallback": "",
+  "serialExtra": [],
+
+  "model": "Android phone",
+  "owner": "<你在聊天 App 里的昵称>",
+
+  "unlockPinFile": "~/.dsh/phone-unlock.txt",
+  "unlockPin": "",
+
+  "python": "python",
+
+  "pkg": "com.heytap.speechassist",
+  "ime": "",
+  "adbIme": "com.android.adbkeyboard/.AdbIME",
+
+  "mcpConfig": "",
+  "xml": ""
+}

@@ -1,0 +1,17 @@
+# 个人配置：含设备地址与解锁信息，永远不要提交
+/config/device.json
+/config/device.local.json
+*.pin
+phone-unlock.txt
+
+# 运行时产物
+__pycache__/
+*.pyc
+node_modules/
+/core/oppo-ai/out/
+/core/oppo-ai/shot.png
+*.card.jpg
+out.png
+
+# 值守状态（属于本机）
+phone-watch-*.json

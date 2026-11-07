@@ -1,0 +1,48 @@
+{
+  "name": "dsh-phone-watch",
+  "version": "0.1.0",
+  "description": "手机值守（dsh-phone-watch）：DSH 插件。按作息与峰谷规则定时叫醒 agent 跑一轮手机值守，并把倒计时、暂停、立即跑一轮放进 DSH 原生设置页。不占 dsh-schedule 的任务表。",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=20",
+    "dsh": ">=0.2.1-rc.2"
+  },
+  "keywords": [
+    "deepseek-harness",
+    "dsh-plugin",
+    "phone",
+    "caretaker",
+    "schedule"
+  ],
+  "main": "lib/host.js",
+  "exports": {
+    ".": "./lib/host.js",
+    "./client": "./lib/client.js",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "tests",
+    "cordis.patch.yml",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "node --test tests/"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "slots"
+      ],
+      "external": [
+        "react"
+      ]
+    }
+  }
+}

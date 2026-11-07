@@ -1,0 +1,26 @@
+{
+  "name": "dsh-phone-nook",
+  "version": "0.1.0",
+  "description": "Let an agent live inside an Android phone: adb as hands and eyes, an optional MCP shell around the phone built-in assistant, and a DSH plugin as the heartbeat.",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20",
+    "python": ">=3.10"
+  },
+  "scripts": {
+    "setup": "node scripts/install.mjs",
+    "verify": "node scripts/install.mjs --verify",
+    "test": "node --test plugin/dsh-phone-watch/tests/"
+  },
+  "keywords": [
+    "deepseek-harness",
+    "dsh",
+    "android",
+    "adb",
+    "automation",
+    "agent",
+    "phone"
+  ]
+}
