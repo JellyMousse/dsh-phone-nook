@@ -263,7 +263,7 @@ window.__ModuleLoader__.load({
           h(
             'div',
             { style: S.row },
-            h('div', { style: S.lab }, '多久看一次'),
+            h('div', { style: S.lab }, '平时多久看一次'),
             h(
               'div',
               { style: S.ctl },
@@ -271,12 +271,25 @@ window.__ModuleLoader__.load({
                 'div',
                 { style: S.inline },
                 h('input', { style: S.small, type: 'number', min: 1, value: 草.idleMin, onChange: 改('idleMin') }),
-                h('span', { style: S.dim }, '分钟一次'),
-                h('span', { style: S.dim }, '·'),
-                h('input', { style: S.small, type: 'number', min: 1, value: 草.awaitingMin, onChange: 改('awaitingMin') }),
-                h('span', { style: S.dim }, '分钟（等你回话时）'),
+                h('span', { style: S.dim }, '分钟一轮'),
               ),
-              h('div', { style: S.hint }, '刚给你发过消息、还没等到回音时用短的那个，隔一会儿再看一下。'),
+              h('div', { style: S.hint }, '没在等谁回话时的节奏：隔这么多分钟扫一遍聊天 App。调大更省、反应更慢；调小更及时、也更费。'),
+            ),
+          ),
+          h(
+            'div',
+            { style: S.row },
+            h('div', { style: S.lab }, '等你回话时'),
+            h(
+              'div',
+              { style: S.ctl },
+              h(
+                'div',
+                { style: S.inline },
+                h('input', { style: S.small, type: 'number', min: 1, value: 草.awaitingMin, onChange: 改('awaitingMin') }),
+                h('span', { style: S.dim }, '分钟一轮'),
+              ),
+              h('div', { style: S.hint }, '我刚给你发完消息、你还没回，就按这个更短的间隔多看几眼；连等 4 轮还没回音，自动回到上面「平时」那个节奏，免得没人回也一直短间隔空跑。'),
             ),
           ),
           h(
@@ -293,7 +306,7 @@ window.__ModuleLoader__.load({
                 h('span', { style: S.dim }, '倍间隔，时段'),
                 h('input', { style: { ...S.input, width: 150, display: 'inline-block' }, value: 草.peakWindows, onChange: 改('peakWindows') }),
               ),
-              h('div', { style: S.hint }, '写成 9-12,14-18。你人在电脑前消息密，我少跑几趟，省点饭钱。'),
+              h('div', { style: S.hint }, '写成 9-12,14-18。这些时段把上面两个间隔乘上这个倍数，我少跑几趟，省点饭钱。'),
             ),
           ),
           h(

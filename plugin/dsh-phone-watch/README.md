@@ -34,7 +34,7 @@
 
 ## 排期规则（lib/watch-core.mjs）
 
-- 常态间隔 `idleMin`（默认 20 分钟），刚回过话等回应时用 `awaitingMin`（默认 8 分钟）
+- 常态间隔 `idleMin`（默认 20 分钟），刚回过话等回应时用 `awaitingMin`（默认 8 分钟）；连等 4 轮还没回音就自动收回 `idleMin`（计数在 `~/.dsh/phone-watch-awaiting.json`，可用 `report_round.py --wait-max N` 调）
 - 峰时窗口 `peakWindows`（默认 9-12、14-18）里间隔 ×`peakMul`（默认 2）—— 人在电脑前消息密，少叫几次省 token
 - 落进睡眠区（`sleepStart` 睡着 → `awakeStart` 醒）就顺延到起床点，再加 0~`wakeSpreadMin` 分钟随机散布，免得每天同一秒醒
 - 到点判断带 `earlyToleranceSec` 提前容忍（默认 60 秒；表可能被浏览器节流，早一点不算错）

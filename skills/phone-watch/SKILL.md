@@ -75,7 +75,7 @@ python __DSH__/skills/phone-ops/report_round.py idle --note "没未读"
 ```
 
 - 脚本往 `~/.dsh/phone-watch-round.json` 写一行，插件 tick 时自己收。**不要用 curl POST /round**：宿主 HTTP 门要浏览器会话凭证，一定 401。
-- `--awaiting` 只在**刚发过消息、还没等到回音**那轮带一次，之后别带（插件靠它切 awaitingMin 短间隔，默认 8 分钟）。
+- `--awaiting` 只在**刚发过消息、还没等到回音**那轮带一次，之后别带（插件靠它切 awaitingMin 短间隔，默认 8 分钟）。连报 4 轮还没回音，脚本自己收回常态节奏，不用手动断（上限 `--wait-max`，计数在 `~/.dsh/phone-watch-awaiting.json`）。
 - 插件按 reason 自动重排下一轮：常态 `idleMin`、峰时按 `peakHours` 倍数、等回应 `awaitingMin`。具体数值看 `phone-watch-config.json`。
 - 收尾要有礼（部署者的偏好，按你自己的语气改）：等回音超时、要从短间隔切回长的时，先打一句招呼：
   - 「我先去忙别的了，看到哪条卡住 @ 我就行」
