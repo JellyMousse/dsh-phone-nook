@@ -48,7 +48,7 @@
 
 | 键 | 默认 | 说人话 |
 | --- | --- | --- |
-| `mode` | `strict` | `strict` 只回主人 + 被点名的；`friendly` 额外允许在 `freeTalkGroups` 里主动接话；`quiet` 只回主人私聊，群里连点名也不回 |
+| `mode` | `strict` | `strict` 只回主人 + 被点名的；`friendly` 额外允许在 `freeTalkGroups` 里主动接话；`eager` 热情，没人点名也会自己起话题、主动分享（列了 `freeTalkGroups` 就只在这些群里起头）；`quiet` 只回主人私聊，群里连点名也不回 |
 | `ownerNames` | 空 → 「主人」 | 谁是主人。多人用顿号隔开，写对方在微信里的昵称/备注 |
 | `mentionKeywords` | 空 → 「@我」 | 消息里出现这些字就算点名。例如 `["@呆呆","@Kuma"]` |
 | `freeTalkGroups` | `[]` | 可以主动接话（不必等人点名）的群或人，只在 `friendly` 下生效 |

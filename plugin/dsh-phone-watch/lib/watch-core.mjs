@@ -22,8 +22,9 @@ export const DEFAULTS = {
 // 值守怎么跟人打交道，不写死在提示词里：租户（部署者）在设置页按自己的社交规矩改。
 //   strict   只回主人 + 被点名（默认，最保守）
 //   friendly 额外允许在指定群/人里主动接话
+//   eager    热情：会自己找话题、主动开口分享
 //   quiet    只回主人私聊，群里连点名也不回
-export const POLICY_MODES = ['strict', 'friendly', 'quiet'];
+export const POLICY_MODES = ['strict', 'friendly', 'eager', 'quiet'];
 
 export const POLICY_DEFAULTS = {
   mode: 'strict',
@@ -67,6 +68,15 @@ export function policyRules(raw) {
 
   if (p.mode === 'quiet') {
     行.push('谁都不主动开口：只回' + 主人 + '的私聊；群里连' + 点名 + '也不回，看到先记下来。');
+  } else if (p.mode === 'eager') {
+    行.push('回' + 主人 + '的消息，以及消息里带' + 点名 + '的。');
+    行.push(
+      p.freeTalkGroups.length
+        ? '在这些群或人里别等人点名：自己找话题、主动开口分享，看到有意思的就聊两句。'
+            + '（' + p.freeTalkGroups.join('、') + '）'
+        : '没人点名也可以自己找话题、主动开口分享，看到有意思的就聊两句。',
+    );
+    行.push('挑着来，一天别刷屏；别人明显不想接就收。');
   } else if (p.mode === 'friendly') {
     行.push('回' + 主人 + '的消息，以及消息里带' + 点名 + '的。');
     行.push(

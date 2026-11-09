@@ -99,6 +99,14 @@ test('友好方式：列出的群可以主动接话，没列就说只按上一�
   assert.match(无[1], /只按上一条/);
 });
 
+test('热情方式：没人点名也会主动起话题，列了群就只在群里', () => {
+  const 任意 = policyRules({ mode: 'eager' });
+  assert.match(任意[1], /自己找话题/);
+  assert.match(任意[2], /别刷屏/);
+  const 限群 = policyRules({ mode: 'eager', freeTalkGroups: ['群A'] });
+  assert.match(限群[1], /群A/);
+});
+
 test('安静方式：群里连点名也不回', () => {
   const 行 = policyRules({ mode: 'quiet' });
   assert.match(行[0], /连@我 也不回|连@我也不回/);

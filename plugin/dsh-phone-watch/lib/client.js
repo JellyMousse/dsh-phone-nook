@@ -405,9 +405,14 @@ window.__ModuleLoader__.load({
                 { style: { ...S.input, width: 240 }, value: 草.policyMode, onChange: 改('policyMode') },
                 h('option', { value: 'strict' }, '严格：只回主人和被点名的'),
                 h('option', { value: 'friendly' }, '友好：指定的群可以主动接话'),
+                h('option', { value: 'eager' }, '热情：没人叫也会主动聊起话题'),
                 h('option', { value: 'quiet' }, '安静：只回主人私聊，群里连点名也不回'),
               ),
-              h('div', { style: S.hint }, '「主动接话」指没人点名也能自己开口吐槽、搭话，只在下面列出的群里生效。'),
+              h(
+                'div',
+                { style: S.hint },
+                '「友好」是别人说话时能插一句；「热情」是没人说话也会自己起头——刷到东西、想到事就发。下面的「可以主动接话的群」是白名单：列了就只在这些群里起头，留空则所有群都可能开口，所以要是怕吵，就把群列上。',
+              ),
             ),
           ),
           h(

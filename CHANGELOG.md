@@ -4,6 +4,7 @@
 
 ## 2026-11-07
 
+- **回话规矩第四档「热情」**：`mode` 多了 `eager`——没人点名也会自己起话题、主动分享，不在群里刷屏；列了 `freeTalkGroups` 就只在这些群里起头。
 - **回话规矩可配**：以前「只回部署者或被点名的」是写死在每轮提醒里的一句话，现在它是配置里的 `policy`：`mode`（strict / friendly / quiet）、`ownerNames`、`mentionKeywords`、`freeTalkGroups`、`ignoreSenders`、`extra`。设置页新增「回话规矩」一块，宿主用 `policyRules()` 翻成人话拼进每轮提醒——规矩仍由模型读和执行，但内容归部署者写，不用改代码。默认 `strict`，跟旧行为一致。
 - **值守与会话解耦**：值守插件每轮的 `followup` 在宿主里是一条 user 消息，会和「主动搭话」类插件的时机/冷却互相污染。做法写进 README —— 建两个会话，`targetSession` 指向值守会话，搭话插件指向聊天会话，不改任何第三方源码。
 - **等回音有上限**：`report_round.py --awaiting` 连报 4 轮没回音就自动收回常态节奏（`--wait-max` 可调，计数在 `~/.dsh/phone-watch-awaiting.json`），免得没人回也一直短间隔空跑。
