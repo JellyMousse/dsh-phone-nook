@@ -150,7 +150,9 @@ test('上一轮真聊过，唤醒文案才带记忆一步', async () => {
   表[0]()
   await new Promise((r) => setTimeout(r, 50))
   assert.equal(唤醒.length, 1)
-  assert.match(唤醒[0].content[0].text, /phone_memory\.py touch/)
+  // 凌晨 2 点那一轮固定推睡前 digest，其余时段才推 touch；测试别跟真实时钟打架
+  const 该有 = new Date().getHours() === 2 ? /phone_memory\.py digest/ : /phone_memory\.py touch/
+  assert.match(唤醒[0].content[0].text, 该有)
 })
 
 test('agent 写收件文件报轮，tick 会收走并重排', async () => {
