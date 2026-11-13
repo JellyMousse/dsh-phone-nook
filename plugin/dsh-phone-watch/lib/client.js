@@ -388,9 +388,6 @@ window.__ModuleLoader__.load({
         h(
           'div',
           { style: S.card },
-        h(
-          'div',
-          { style: S.card },
           h('div', { style: S.h }, '回话规矩'),
           h('div', { style: S.sub }, '值守时跟谁说话、能不能主动开口，都在这里定。改完下一轮生效。'),
           h(
@@ -481,6 +478,9 @@ window.__ModuleLoader__.load({
           ),
         ),
 
+        h(
+          'div',
+          { style: S.card },
           h('div', { style: S.h }, '我手痒的时候'),
           h('div', { style: S.sub }, '平时别点，出问题才用。'),
           h(
